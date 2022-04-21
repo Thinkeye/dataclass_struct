@@ -1,64 +1,79 @@
+"""
+Decorator providing capability to emit and read a dataclass as a binary buffer.
+
+Usage:
+
+@dataclass_struct
+class MyDataClass:
+    my_flt: float = field(default=0, metadata={struct_type: '<f'})
+    my_num: int = field(default=0, metadata={struct_type: '<i'})
+
+test_obj = TestModel(3.14, 42)
+buff = test_obj.to_buffer()
+"""
+
 import dataclasses
-from struct import unpack_from, pack, calcsize
+import struct
 
 struct_type = 'struct_type'
 
-
 def dataclass_struct(cls):
     """
-    Decorator enhancing the dataclass to work with struct.
+    Decorate dataclass to work with struct.
+    
+    Adding methods: from_buffer, to_buffer and instance_from_buffer.
     """
+    if not dataclasses.is_dataclass(cls):
+        dataclasses.dataclass(cls)
 
-    dataclasses.dataclass(cls)
 
     def from_buffer(self, buffer: bytes, offset=0):
         """
-        Reads the wrapped dataclass from a binary buffer
+        Read the wrapped dataclass from a binary buffer.
 
         :param self: wrapped instance
         :param buffer: buffer tp read
-        :param offset: offset o start reading
+        :param offset: (optional) offset o start reading
         :return: offset after last consumed byte
         """
-
         for field in dataclasses.fields(cls):
             if field.metadata and field.metadata.get(struct_type):
                 field_format = field.metadata[struct_type]
-                self.__dict__[field.name] = unpack_from(
+                self.__dict__[field.name] = struct.unpack_from(
                     field_format, buffer, offset)[0]
-                offset = offset + calcsize(field_format)
+                offset = offset + struct.calcsize(field_format)
         return offset
 
     setattr(cls, 'from_buffer', from_buffer)
 
+
     def to_buffer(self, buffer=b''):
         """
-        Stores the wrapped dataclass to a binary buffer
+        Store the wrapped dataclass to a binary buffer.
 
         :param self: wrapped instance
-        :param buffer: buffer to continue, if any
+        :param buffer: (optional) buffer to continue, if any
         :return: resulting buffer
         """
-
         for field in dataclasses.fields(cls):
             if field.metadata and field.metadata.get(struct_type):
-                buffer = buffer + pack(field.metadata[struct_type],
+                buffer = buffer + struct.pack(field.metadata[struct_type],
                                        self.__dict__[field.name])
         return buffer
 
     setattr(cls, 'to_buffer', to_buffer)
 
-    def instance_from_buffer(buffer: bytes):
+
+    def instance_from_buffer(buffer: bytes, offset=0):
         """
-        Static method of the decorated class for constructing of a wrapped
-        class instance from a buffer.
+        Construct a wrapped class instance from a buffer.
 
         :param buffer: buffer with source binary data
+        :param offset: (optional) offset o start reading
         :return: class instance
         """
-
         object_instance = cls()
-        object_instance.from_buffer(buffer)
+        object_instance.from_buffer(buffer, offset)
         return object_instance
 
     setattr(cls, 'instance_from_buffer', instance_from_buffer)
