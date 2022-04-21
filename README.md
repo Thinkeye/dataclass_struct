@@ -1,6 +1,9 @@
 ## dataclass_struct
 
-Decorator providing capability to emit and read a dataclass as a binary buffer.
+Decorator providing capability to emit and read the decorated dataclass as a binary buffer.
+A special new metadata field `struct_type` contains the *struct* format for the dataclass field.
+
+See *struct* documentation for the formatting options.
 
 ## Usage 
 ```python

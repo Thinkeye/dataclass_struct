@@ -39,8 +39,11 @@ def dataclass_struct(cls):
         for field in dataclasses.fields(cls):
             if field.metadata and field.metadata.get(struct_type):
                 field_format = field.metadata[struct_type]
-                self.__dict__[field.name] = struct.unpack_from(
-                    field_format, buffer, offset)[0]
+                value = struct.unpack_from(field_format, buffer, offset)[0]
+                if field.type == str:
+                    self.__dict__[field.name] = value.decode('utf-8')
+                else:
+                    self.__dict__[field.name] = value
                 offset = offset + struct.calcsize(field_format)
         return offset
 
@@ -57,8 +60,11 @@ def dataclass_struct(cls):
         """
         for field in dataclasses.fields(cls):
             if field.metadata and field.metadata.get(struct_type):
-                buffer = buffer + struct.pack(field.metadata[struct_type],
-                                       self.__dict__[field.name])
+                if field.type == str:
+                    value = self.__dict__[field.name].encode('utf-8')
+                else:
+                    value = self.__dict__[field.name]
+                buffer = buffer + struct.pack(field.metadata[struct_type], value)
         return buffer
 
     setattr(cls, 'to_buffer', to_buffer)

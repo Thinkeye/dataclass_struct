@@ -18,6 +18,11 @@ class ExplicitDataclass:
     my_num: int = field(default=0, metadata={struct_type: '<i'})
     no_struct: int = field(default=0, metadata={'dummy': '1'})
 
+@dataclass_struct
+class StringTest:
+    byte_name: bytes = field(default=b'', metadata={struct_type: '16s'})
+    str_name: str = field(default='', metadata={struct_type: '16s'})
+    
 
 class SimpleClassTestCase(unittest.TestCase):
     def test_testmodel(self):
@@ -48,6 +53,12 @@ class SimpleClassTestCase(unittest.TestCase):
         test_obj = ExplicitDataclass.instance_from_buffer(b'\xc3\xf5H@`\x00\x00\x00')
         self.assertAlmostEqual(test_obj.my_flt, 3.14, 5)
 
+    def test_string(self):
+        test_obj = StringTest(b'Hello World', 'Bye bye')
+        self.assertEqual(b'Hello World\x00\x00\x00\x00\x00Bye bye\x00\x00\x00\x00\x00\x00\x00\x00\x00', test_obj.to_buffer())
+        new_instance = StringTest.instance_from_buffer(b'Hello World\x00\x00\x00\x00\x00Bye !!!\x00\x00\x00\x00\x00\x00\x00\x00\x00')
+        self.assertEqual(new_instance.byte_name, b'Hello World\x00\x00\x00\x00\x00')
+        self.assertEqual(new_instance.str_name, 'Bye !!!\x00\x00\x00\x00\x00\x00\x00\x00\x00')
 
 if __name__ == '__main__':
     unittest.main()
