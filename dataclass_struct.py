@@ -16,8 +16,9 @@ import dataclasses
 import struct
 
 struct_type = 'struct_type'
+encoding = 'encoding'
 
-def dataclass_struct(cls):
+def _process_class(cls, use_encoding):
     """
     Decorate dataclass to work with struct.
     
@@ -26,6 +27,18 @@ def dataclass_struct(cls):
     if not dataclasses.is_dataclass(cls):
         dataclasses.dataclass(cls)
 
+    def dec_str(field, val):
+        enc = use_encoding
+        if field.metadata.get(encoding):
+            enc = field.metadata.get(encoding)
+        return val.decode(enc).rstrip('\00')
+        
+    def enc_str(field, val):
+        enc = use_encoding
+        if field.metadata.get(encoding):
+            enc = field.metadata.get(encoding)
+        return val.encode(enc)
+        
 
     def from_buffer(self, buffer: bytes, offset=0):
         """
@@ -41,7 +54,7 @@ def dataclass_struct(cls):
                 field_format = field.metadata[struct_type]
                 value = struct.unpack_from(field_format, buffer, offset)[0]
                 if field.type == str:
-                    self.__dict__[field.name] = value.decode('utf-8')
+                    self.__dict__[field.name] = dec_str(field, value)
                 else:
                     self.__dict__[field.name] = value
                 offset = offset + struct.calcsize(field_format)
@@ -61,7 +74,7 @@ def dataclass_struct(cls):
         for field in dataclasses.fields(cls):
             if field.metadata and field.metadata.get(struct_type):
                 if field.type == str:
-                    value = self.__dict__[field.name].encode('utf-8')
+                    value = enc_str(field, self.__dict__[field.name])
                 else:
                     value = self.__dict__[field.name]
                 buffer = buffer + struct.pack(field.metadata[struct_type], value)
@@ -85,3 +98,14 @@ def dataclass_struct(cls):
     setattr(cls, 'instance_from_buffer', instance_from_buffer)
 
     return cls
+    
+    
+def dataclass_struct(cls=None, /, *, use_encoding= 'utf_8'):
+
+    def wrap(cls):
+        return _process_class(cls, use_encoding)
+
+    if cls is None:
+        return wrap
+
+    return wrap(cls)

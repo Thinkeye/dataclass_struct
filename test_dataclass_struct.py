@@ -1,6 +1,6 @@
 import unittest
 from dataclasses import field, dataclass
-from dataclass_struct import struct_type, dataclass_struct
+from dataclass_struct import struct_type, dataclass_struct, encoding
 
 
 @dataclass_struct
@@ -22,6 +22,7 @@ class ExplicitDataclass:
 class StringTest:
     byte_name: bytes = field(default=b'', metadata={struct_type: '16s'})
     str_name: str = field(default='', metadata={struct_type: '16s'})
+    str_with_enc: str = field(default='', metadata={struct_type: '32s', encoding: 'utf-16'})
     
 
 class SimpleClassTestCase(unittest.TestCase):
@@ -53,12 +54,17 @@ class SimpleClassTestCase(unittest.TestCase):
         test_obj = ExplicitDataclass.instance_from_buffer(b'\xc3\xf5H@`\x00\x00\x00')
         self.assertAlmostEqual(test_obj.my_flt, 3.14, 5)
 
-    def test_string(self):
-        test_obj = StringTest(b'Hello World', 'Bye bye')
-        self.assertEqual(b'Hello World\x00\x00\x00\x00\x00Bye bye\x00\x00\x00\x00\x00\x00\x00\x00\x00', test_obj.to_buffer())
-        new_instance = StringTest.instance_from_buffer(b'Hello World\x00\x00\x00\x00\x00Bye !!!\x00\x00\x00\x00\x00\x00\x00\x00\x00')
+    def test_bacis_string(self):
+        buff = b'Hello World\x00\x00\x00\x00\x00Bye bye\x00\x00\x00'\
+            b'\x00\x00\x00\x00\x00\x00\xff\xfea\x00n\x00o\x00t\x00h'\
+            b'\x00e\x00r\x00 \x00o\x00n\x00e\x00\x00\x00\x00\x00\x00'\
+            b'\x00\x00\x00'
+        test_obj = StringTest(b'Hello World', 'Bye bye', 'another one')
+        self.assertEqual(buff, test_obj.to_buffer())
+        new_instance = StringTest.instance_from_buffer(buff)
         self.assertEqual(new_instance.byte_name, b'Hello World\x00\x00\x00\x00\x00')
-        self.assertEqual(new_instance.str_name, 'Bye !!!\x00\x00\x00\x00\x00\x00\x00\x00\x00')
+        self.assertEqual(new_instance.str_name, 'Bye bye')
+        self.assertEqual(new_instance.str_with_enc, 'another one')
 
 if __name__ == '__main__':
     unittest.main()
