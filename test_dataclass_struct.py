@@ -1,34 +1,45 @@
+"""
+This is a unit test module for dataclass_struct.
+
+Pylint doesn't see the methods injected by the dataclass_struct
+decorator, so we disable related warnings below.
+"""
+# pylint: disable=no-member
+# pylint: disable=R0903
+# pylint: disable=C0115
+# pylint: disable=C0116
+
 import unittest
 from dataclasses import field, dataclass
-from dataclass_struct import struct_type, dataclass_struct, encoding
+from dataclass_struct import STRUCT_TYPE, ENCODING, dataclass_struct
 
 
 @dataclass_struct
 class TestModel:
     my_name: str = ''
-    my_flt: float = field(default=0, metadata={struct_type: '<f'})
-    my_num: int = field(default=0, metadata={struct_type: '<i'})
+    my_flt: float = field(default=0, metadata={STRUCT_TYPE: '<f'})
+    my_num: int = field(default=0, metadata={STRUCT_TYPE: '<i'})
     no_struct: int = field(default=0, metadata={'dummy': '1'})
 
 @dataclass_struct
 @dataclass(order=True)
 class ExplicitDataclass:
     my_name: str = ''
-    my_flt: float = field(default=0, metadata={struct_type: '<f'})
-    my_num: int = field(default=0, metadata={struct_type: '<i'})
+    my_flt: float = field(default=0, metadata={STRUCT_TYPE: '<f'})
+    my_num: int = field(default=0, metadata={STRUCT_TYPE: '<i'})
     no_struct: int = field(default=0, metadata={'dummy': '1'})
 
 @dataclass_struct
 class StringTest:
-    byte_name: bytes = field(default=b'', metadata={struct_type: '16s'})
-    str_name: str = field(default='', metadata={struct_type: '16s'})
-    str_with_enc: str = field(default='', metadata={struct_type: '32s', encoding: 'utf-16'})
-    
+    byte_name: bytes = field(default=b'', metadata={STRUCT_TYPE: '16s'})
+    str_name: str = field(default='', metadata={STRUCT_TYPE: '16s'})
+    str_with_enc: str = field(default='', metadata={STRUCT_TYPE: '32s', ENCODING: 'utf-16'})
+
 @dataclass_struct(use_encoding='ascii')
 class DefaultEncodingTest:
-    byte_name: bytes = field(default=b'', metadata={struct_type: '16s'})
-    str_name: str = field(default='', metadata={struct_type: '16s'})
-    str_with_enc: str = field(default='', metadata={struct_type: '32s', encoding: 'utf-16'})
+    byte_name: bytes = field(default=b'', metadata={STRUCT_TYPE: '16s'})
+    str_name: str = field(default='', metadata={STRUCT_TYPE: '16s'})
+    str_with_enc: str = field(default='', metadata={STRUCT_TYPE: '32s', ENCODING: 'utf-16'})
 
 
 class SimpleClassTestCase(unittest.TestCase):

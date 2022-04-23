@@ -5,8 +5,8 @@ Usage:
 
 @dataclass_struct
 class MyDataClass:
-    my_flt: float = field(default=0, metadata={struct_type: '<f'})
-    my_num: int = field(default=0, metadata={struct_type: '<i'})
+    my_flt: float = field(default=0, metadata={STRUCT_TYPE: '<f'})
+    my_num: int = field(default=0, metadata={STRUCT_TYPE: '<i'})
 
 test_obj = TestModel(3.14, 42)
 buff = test_obj.to_buffer()
@@ -15,13 +15,13 @@ buff = test_obj.to_buffer()
 import dataclasses
 import struct
 
-struct_type = 'struct_type'
-encoding = 'encoding'
+STRUCT_TYPE = 'STRUCT_TYPE'
+ENCODING = 'encoding'
 
 def _process_class(cls, use_encoding):
     """
     Decorate dataclass to work with struct.
-    
+
     Adding methods: from_buffer, to_buffer and instance_from_buffer.
     """
     if not dataclasses.is_dataclass(cls):
@@ -29,16 +29,16 @@ def _process_class(cls, use_encoding):
 
     def dec_str(field, val):
         enc = use_encoding
-        if field.metadata.get(encoding):
-            enc = field.metadata.get(encoding)
+        if field.metadata.get(ENCODING):
+            enc = field.metadata.get(ENCODING)
         return val.decode(enc).rstrip('\00')
-        
+
     def enc_str(field, val):
         enc = use_encoding
-        if field.metadata.get(encoding):
-            enc = field.metadata.get(encoding)
+        if field.metadata.get(ENCODING):
+            enc = field.metadata.get(ENCODING)
         return val.encode(enc)
-        
+
 
     def from_buffer(self, buffer: bytes, offset=0):
         """
@@ -50,8 +50,8 @@ def _process_class(cls, use_encoding):
         :return: offset after last consumed byte
         """
         for field in dataclasses.fields(cls):
-            if field.metadata and field.metadata.get(struct_type):
-                field_format = field.metadata[struct_type]
+            if field.metadata and field.metadata.get(STRUCT_TYPE):
+                field_format = field.metadata[STRUCT_TYPE]
                 value = struct.unpack_from(field_format, buffer, offset)[0]
                 if field.type == str:
                     self.__dict__[field.name] = dec_str(field, value)
@@ -72,12 +72,12 @@ def _process_class(cls, use_encoding):
         :return: resulting buffer
         """
         for field in dataclasses.fields(cls):
-            if field.metadata and field.metadata.get(struct_type):
+            if field.metadata and field.metadata.get(STRUCT_TYPE):
                 if field.type == str:
                     value = enc_str(field, self.__dict__[field.name])
                 else:
                     value = self.__dict__[field.name]
-                buffer = buffer + struct.pack(field.metadata[struct_type], value)
+                buffer = buffer + struct.pack(field.metadata[STRUCT_TYPE], value)
         return buffer
 
     setattr(cls, 'to_buffer', to_buffer)
@@ -98,10 +98,12 @@ def _process_class(cls, use_encoding):
     setattr(cls, 'instance_from_buffer', instance_from_buffer)
 
     return cls
-    
-    
-def dataclass_struct(cls=None, /, *, use_encoding= 'utf_8'):
 
+
+def dataclass_struct(cls=None, /, *, use_encoding= 'utf_8'):
+    """
+    Top level decorator
+    """
     def wrap(cls):
         return _process_class(cls, use_encoding)
 

@@ -5,6 +5,8 @@ A special new metadata field `struct_type` contains the *struct* format for the 
 
 See *struct* documentation for the formatting options.
 
+Currently, only flat classes without dataclass members and without inheritance are supported.
+
 ## Usage 
 ```python
 @dataclass_struct
