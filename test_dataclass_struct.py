@@ -15,7 +15,7 @@ from dataclass_struct import STRUCT_TYPE, ENCODING, dataclass_struct
 
 
 @dataclass_struct
-class TestModel:
+class SimpleTestModel:
     my_name: str = ''
     my_flt: float = field(default=0, metadata={STRUCT_TYPE: '<f'})
     my_num: int = field(default=0, metadata={STRUCT_TYPE: '<i'})
@@ -44,17 +44,17 @@ class DefaultEncodingTest:
 
 class SimpleClassTestCase(unittest.TestCase):
     def test_testmodel(self):
-        test_obj = TestModel('Name', 3.14, 42,37)
+        test_obj = SimpleTestModel('Name', 3.14, 42,37)
         self.assertEqual('Name', test_obj.my_name)
         self.assertEqual(b'\xc3\xf5H@*\x00\x00\x00', test_obj.to_buffer())
         test_obj.my_num = 96
         self.assertEqual(b'\xc3\xf5H@`\x00\x00\x00', test_obj.to_buffer())
-        test_obj = TestModel()
+        test_obj = SimpleTestModel()
         self.assertEqual(test_obj.my_flt, 0)
         test_obj.from_buffer(b'\xc3\xf5H@*\x00\x00\x00')
         self.assertAlmostEqual(test_obj.my_flt, 3.14, 5)
 
-        test_obj = TestModel.instance_from_buffer(b'\xc3\xf5H@`\x00\x00\x00')
+        test_obj = SimpleTestModel.instance_from_buffer(b'\xc3\xf5H@`\x00\x00\x00')
         self.assertAlmostEqual(test_obj.my_flt, 3.14, 5)
 
     def test_explicit_dataclass(self):
