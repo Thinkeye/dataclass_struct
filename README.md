@@ -1,7 +1,7 @@
 ## dataclass_struct
 
 Decorator providing capability to emit and read the decorated dataclass as a binary buffer.
-A special new metadata field `struct_type` contains the *struct* format for the dataclass field.
+A special new metadata field `STRUCT_TYPE` contains the *struct* format for the dataclass field.
 
 See *struct* documentation for the formatting options.
 
