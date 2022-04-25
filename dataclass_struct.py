@@ -18,6 +18,7 @@ import struct
 STRUCT_TYPE = 'STRUCT_TYPE'
 ENCODING = 'encoding'
 
+
 def _process_class(cls, use_encoding):
     """
     Decorate dataclass to work with struct.
@@ -38,7 +39,6 @@ def _process_class(cls, use_encoding):
         if field.metadata.get(ENCODING):
             enc = field.metadata.get(ENCODING)
         return val.encode(enc)
-
 
     def from_buffer(self, buffer: bytes, offset=0):
         """
@@ -62,7 +62,6 @@ def _process_class(cls, use_encoding):
 
     setattr(cls, 'from_buffer', from_buffer)
 
-
     def to_buffer(self, buffer=b''):
         """
         Store the wrapped dataclass to a binary buffer.
@@ -77,11 +76,11 @@ def _process_class(cls, use_encoding):
                     value = enc_str(field, self.__dict__[field.name])
                 else:
                     value = self.__dict__[field.name]
-                buffer = buffer + struct.pack(field.metadata[STRUCT_TYPE], value)
+                buffer = buffer + struct.pack(
+                    field.metadata[STRUCT_TYPE], value)
         return buffer
 
     setattr(cls, 'to_buffer', to_buffer)
-
 
     def instance_from_buffer(buffer: bytes, offset=0):
         """
@@ -100,7 +99,7 @@ def _process_class(cls, use_encoding):
     return cls
 
 
-def dataclass_struct(cls=None, /, *, use_encoding= 'utf_8'):
+def dataclass_struct(cls=None, /, *, use_encoding='utf_8'):
     """
     Top level decorator
     """

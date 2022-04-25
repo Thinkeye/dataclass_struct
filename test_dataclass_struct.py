@@ -21,6 +21,7 @@ class SimpleTestModel:
     my_num: int = field(default=0, metadata={STRUCT_TYPE: '<i'})
     no_struct: int = field(default=0, metadata={'dummy': '1'})
 
+
 @dataclass_struct
 @dataclass(order=True)
 class ExplicitDataclass:
@@ -29,22 +30,26 @@ class ExplicitDataclass:
     my_num: int = field(default=0, metadata={STRUCT_TYPE: '<i'})
     no_struct: int = field(default=0, metadata={'dummy': '1'})
 
+
 @dataclass_struct
 class StringTest:
     byte_name: bytes = field(default=b'', metadata={STRUCT_TYPE: '16s'})
     str_name: str = field(default='', metadata={STRUCT_TYPE: '16s'})
-    str_with_enc: str = field(default='', metadata={STRUCT_TYPE: '32s', ENCODING: 'utf-16'})
+    str_with_enc: str = field(default='', metadata={STRUCT_TYPE: '32s',
+                              ENCODING: 'utf-16'})
+
 
 @dataclass_struct(use_encoding='ascii')
 class DefaultEncodingTest:
     byte_name: bytes = field(default=b'', metadata={STRUCT_TYPE: '16s'})
     str_name: str = field(default='', metadata={STRUCT_TYPE: '16s'})
-    str_with_enc: str = field(default='', metadata={STRUCT_TYPE: '32s', ENCODING: 'utf-16'})
+    str_with_enc: str = field(default='', metadata={STRUCT_TYPE: '32s',
+                              ENCODING: 'utf-16'})
 
 
 class SimpleClassTestCase(unittest.TestCase):
     def test_testmodel(self):
-        test_obj = SimpleTestModel('Name', 3.14, 42,37)
+        test_obj = SimpleTestModel('Name', 3.14, 42, 37)
         self.assertEqual('Name', test_obj.my_name)
         self.assertEqual(b'\xc3\xf5H@*\x00\x00\x00', test_obj.to_buffer())
         test_obj.my_num = 96
@@ -54,11 +59,12 @@ class SimpleClassTestCase(unittest.TestCase):
         test_obj.from_buffer(b'\xc3\xf5H@*\x00\x00\x00')
         self.assertAlmostEqual(test_obj.my_flt, 3.14, 5)
 
-        test_obj = SimpleTestModel.instance_from_buffer(b'\xc3\xf5H@`\x00\x00\x00')
+        test_obj = SimpleTestModel.instance_from_buffer(
+            b'\xc3\xf5H@`\x00\x00\x00')
         self.assertAlmostEqual(test_obj.my_flt, 3.14, 5)
 
     def test_explicit_dataclass(self):
-        test_obj = ExplicitDataclass('Name', 3.14, 42,37)
+        test_obj = ExplicitDataclass('Name', 3.14, 42, 37)
         self.assertEqual('Name', test_obj.my_name)
         self.assertEqual(b'\xc3\xf5H@*\x00\x00\x00', test_obj.to_buffer())
         test_obj.my_num = 96
@@ -68,7 +74,8 @@ class SimpleClassTestCase(unittest.TestCase):
         test_obj.from_buffer(b'\xc3\xf5H@*\x00\x00\x00')
         self.assertAlmostEqual(test_obj.my_flt, 3.14, 5)
 
-        test_obj = ExplicitDataclass.instance_from_buffer(b'\xc3\xf5H@`\x00\x00\x00')
+        test_obj = ExplicitDataclass.instance_from_buffer(
+            b'\xc3\xf5H@`\x00\x00\x00')
         self.assertAlmostEqual(test_obj.my_flt, 3.14, 5)
 
     def test_basic_string(self):
@@ -79,7 +86,8 @@ class SimpleClassTestCase(unittest.TestCase):
         test_obj = StringTest(b'Hello World', 'Bye bye', 'another one')
         self.assertEqual(buff, test_obj.to_buffer())
         new_instance = StringTest.instance_from_buffer(buff)
-        self.assertEqual(new_instance.byte_name, b'Hello World\x00\x00\x00\x00\x00')
+        self.assertEqual(new_instance.byte_name,
+                         b'Hello World\x00\x00\x00\x00\x00')
         self.assertEqual(new_instance.str_name, 'Bye bye')
         self.assertEqual(new_instance.str_with_enc, 'another one')
 
@@ -88,10 +96,12 @@ class SimpleClassTestCase(unittest.TestCase):
             b'\x00\x00\x00\x00\x00\x00\xff\xfea\x00n\x00o\x00t\x00h'\
             b'\x00e\x00r\x00 \x00o\x00n\x00e\x00\x00\x00\x00\x00\x00'\
             b'\x00\x00\x00'
-        test_obj = DefaultEncodingTest(b'Hello World', 'Bye bye', 'another one')
+        test_obj = DefaultEncodingTest(b'Hello World', 'Bye bye',
+                                       'another one')
         self.assertEqual(buff, test_obj.to_buffer())
         new_instance = DefaultEncodingTest.instance_from_buffer(buff)
-        self.assertEqual(new_instance.byte_name, b'Hello World\x00\x00\x00\x00\x00')
+        self.assertEqual(new_instance.byte_name,
+                         'Hello World\x00\x00\x00\x00\x00')
         self.assertEqual(new_instance.str_name, 'Bye bye')
         self.assertEqual(new_instance.str_with_enc, 'another one')
 
