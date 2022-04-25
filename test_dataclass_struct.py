@@ -101,7 +101,7 @@ class SimpleClassTestCase(unittest.TestCase):
         self.assertEqual(buff, test_obj.to_buffer())
         new_instance = DefaultEncodingTest.instance_from_buffer(buff)
         self.assertEqual(new_instance.byte_name,
-                         'Hello World\x00\x00\x00\x00\x00')
+                         b'Hello World\x00\x00\x00\x00\x00')
         self.assertEqual(new_instance.str_name, 'Bye bye')
         self.assertEqual(new_instance.str_with_enc, 'another one')
 
