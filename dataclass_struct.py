@@ -18,8 +18,12 @@ import struct
 STRUCT_TYPE = 'STRUCT_TYPE'
 ENCODING = 'encoding'
 
+# We are manipulating class from inside, but we don't want others to see our
+# details, so we tell pylint to keep silent about it.
+# pylint: disable=W0212
 
-def _process_class(cls, use_encoding):
+
+def _process_class(cls, compiled, use_encoding):
     """
     Decorate dataclass to work with struct.
 
@@ -39,6 +43,14 @@ def _process_class(cls, use_encoding):
         if field.metadata.get(ENCODING):
             enc = field.metadata.get(ENCODING)
         return val.encode(enc)
+
+    if compiled:
+        fmt = ''
+        for field in dataclasses.fields(cls):
+            if field.metadata and field.metadata.get(STRUCT_TYPE):
+                fmt = fmt + field.metadata[STRUCT_TYPE]
+        if len(fmt) > 0:
+            setattr(cls, '_internal_struct', struct.Struct(fmt))
 
     def from_buffer(self, buffer: bytes, offset=0):
         """
@@ -62,6 +74,26 @@ def _process_class(cls, use_encoding):
 
     setattr(cls, 'from_buffer', from_buffer)
 
+    def field_value(self, field):
+        if field.type == str:
+            return enc_str(field, self.__dict__[field.name])
+        return self.__dict__[field.name]
+
+    def _to_buffer_direct(self, buffer):
+        for field in dataclasses.fields(cls):
+            if field.metadata and field.metadata.get(STRUCT_TYPE):
+                buffer = buffer + struct.pack(
+                    field.metadata[STRUCT_TYPE], field_value(self, field))
+        return buffer
+
+    def _to_buffer_compiled(self):
+        vals = []
+        for field in dataclasses.fields(cls):
+            if field.metadata and field.metadata.get(STRUCT_TYPE):
+                vals.append(field_value(self, field))
+        buffer = cls._internal_struct.pack(*vals)
+        return buffer
+
     def to_buffer(self, buffer=b''):
         """
         Store the wrapped dataclass to a binary buffer.
@@ -70,15 +102,9 @@ def _process_class(cls, use_encoding):
         :param buffer: (optional) buffer to continue, if any
         :return: resulting buffer
         """
-        for field in dataclasses.fields(cls):
-            if field.metadata and field.metadata.get(STRUCT_TYPE):
-                if field.type == str:
-                    value = enc_str(field, self.__dict__[field.name])
-                else:
-                    value = self.__dict__[field.name]
-                buffer = buffer + struct.pack(
-                    field.metadata[STRUCT_TYPE], value)
-        return buffer
+        if not hasattr(cls, '_internal_struct'):
+            return _to_buffer_direct(self, buffer)
+        return buffer + _to_buffer_compiled(self)
 
     setattr(cls, 'to_buffer', to_buffer)
 
@@ -99,12 +125,12 @@ def _process_class(cls, use_encoding):
     return cls
 
 
-def dataclass_struct(cls=None, /, *, use_encoding='utf_8'):
+def dataclass_struct(cls=None, /, *, compiled=False, use_encoding='utf_8'):
     """
     Top level decorator
     """
     def wrap(cls):
-        return _process_class(cls, use_encoding)
+        return _process_class(cls, compiled, use_encoding)
 
     if cls is None:
         return wrap
