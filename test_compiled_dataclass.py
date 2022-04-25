@@ -18,6 +18,7 @@ from dataclass_struct import STRUCT_TYPE, dataclass_struct
 class CompiledModel:
     my_flt: float = field(default=0, metadata={STRUCT_TYPE: '<f'})
     my_num: int = field(default=0, metadata={STRUCT_TYPE: 'i'})
+    ignore: int = field(default=0)
 
 
 class CompiledStructTestCase(unittest.TestCase):

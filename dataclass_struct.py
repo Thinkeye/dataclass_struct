@@ -87,10 +87,8 @@ def _process_class(cls, compiled, use_encoding):
         return buffer
 
     def _to_buffer_compiled(self):
-        vals = []
-        for field in dataclasses.fields(cls):
-            if field.metadata and field.metadata.get(STRUCT_TYPE):
-                vals.append(field_value(self, field))
+        vals = [field_value(self, f) for f in dataclasses.fields(cls)
+                if f.metadata.get(STRUCT_TYPE)]
         buffer = cls._internal_struct.pack(*vals)
         return buffer
 
