@@ -52,15 +52,7 @@ def _process_class(cls, compiled, use_encoding):
         if len(fmt) > 0:
             setattr(cls, '_internal_struct', struct.Struct(fmt))
 
-    def from_buffer(self, buffer: bytes, offset=0):
-        """
-        Read the wrapped dataclass from a binary buffer.
-
-        :param self: wrapped instance
-        :param buffer: buffer tp read
-        :param offset: (optional) offset o start reading
-        :return: offset after last consumed byte
-        """
+    def _from_buffer_direct(self, buffer: bytes, offset):
         for field in dataclasses.fields(cls):
             if field.metadata and field.metadata.get(STRUCT_TYPE):
                 field_format = field.metadata[STRUCT_TYPE]
@@ -72,9 +64,36 @@ def _process_class(cls, compiled, use_encoding):
                 offset = offset + struct.calcsize(field_format)
         return offset
 
+    def _from_buffer_compiled(self, buffer: bytes, offset):
+        vals = cls._internal_struct.unpack_from(buffer, offset)
+        i = 0
+        for field in dataclasses.fields(cls):
+            if field.metadata and field.metadata.get(STRUCT_TYPE):
+                value = vals[i]
+                i = i + 1
+                if field.type == str:
+                    self.__dict__[field.name] = dec_str(field, value)
+                else:
+                    self.__dict__[field.name] = value
+        offset = offset + cls._internal_struct.size
+        return offset
+
+    def from_buffer(self, buffer: bytes, offset=0):
+        """
+        Read the wrapped dataclass from a binary buffer.
+
+        :param self: wrapped instance
+        :param buffer: buffer tp read
+        :param offset: (optional) offset o start reading
+        :return: offset after last consumed byte
+        """
+        if not hasattr(cls, '_internal_struct'):
+            return _from_buffer_direct(self, buffer, offset)
+        return _from_buffer_compiled(self, buffer, offset)
+
     setattr(cls, 'from_buffer', from_buffer)
 
-    def field_value(self, field):
+    def get_value(self, field):
         if field.type == str:
             return enc_str(field, self.__dict__[field.name])
         return self.__dict__[field.name]
@@ -83,11 +102,11 @@ def _process_class(cls, compiled, use_encoding):
         for field in dataclasses.fields(cls):
             if field.metadata and field.metadata.get(STRUCT_TYPE):
                 buffer = buffer + struct.pack(
-                    field.metadata[STRUCT_TYPE], field_value(self, field))
+                    field.metadata[STRUCT_TYPE], get_value(self, field))
         return buffer
 
     def _to_buffer_compiled(self):
-        vals = [field_value(self, f) for f in dataclasses.fields(cls)
+        vals = [get_value(self, f) for f in dataclasses.fields(cls)
                 if f.metadata.get(STRUCT_TYPE)]
         buffer = cls._internal_struct.pack(*vals)
         return buffer

@@ -27,6 +27,9 @@ class CompiledStructTestCase(unittest.TestCase):
         self.assertEqual(b'\xc3\xf5H@*\x00\x00\x00', test_obj.to_buffer())
         test_obj.my_num = 96
         self.assertEqual(b'\xc3\xf5H@`\x00\x00\x00', test_obj.to_buffer())
+        new_instance = CompiledModel.instance_from_buffer(
+            b'\xc3\xf5H@`\x00\x00\x00')
+        self.assertEqual(new_instance.my_num, 96)
 
 
 if __name__ == '__main__':
