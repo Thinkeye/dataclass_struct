@@ -52,7 +52,11 @@ def _process_class(cls, use_encoding):
         for field in dataclasses.fields(cls):
             if field.metadata and field.metadata.get(STRUCT_TYPE):
                 field_format = field.metadata[STRUCT_TYPE]
-                value = struct.unpack_from(field_format, buffer, offset)[0]
+                raw_result = struct.unpack_from(field_format, buffer, offset)
+                if isinstance(field.type, list):
+                    value = list(raw_result)
+                else:
+                    value = raw_result[0]
                 if field.type == str:
                     self.__dict__[field.name] = dec_str(field, value)
                 else:
@@ -76,8 +80,12 @@ def _process_class(cls, use_encoding):
                     value = enc_str(field, self.__dict__[field.name])
                 else:
                     value = self.__dict__[field.name]
-                buffer = buffer + struct.pack(
-                    field.metadata[STRUCT_TYPE], value)
+                if isinstance(field.type, list):
+                    buffer = buffer + struct.pack(
+                        field.metadata[STRUCT_TYPE], *value)
+                else:
+                    buffer = buffer + struct.pack(
+                        field.metadata[STRUCT_TYPE], value)
         return buffer
 
     setattr(cls, 'to_buffer', to_buffer)
