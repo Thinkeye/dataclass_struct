@@ -75,15 +75,16 @@ def _process_class(cls, use_encoding):
         :return: resulting buffer
         """
         for field in dataclasses.fields(cls):
-            if field.metadata and field.metadata.get(STRUCT_TYPE):
-                if field.type == str:
-                    value = enc_str(field, self.__dict__[field.name])
-                else:
-                    value = self.__dict__[field.name]
+            value = self.__dict__[field.name]
+            if hasattr(value, 'to_buffer') and callable(value.to_buffer):
+                buffer = value.to_buffer(buffer)
+            elif field.metadata and field.metadata.get(STRUCT_TYPE):
                 if isinstance(field.type, list):
                     buffer = buffer + struct.pack(
                         field.metadata[STRUCT_TYPE], *value)
                 else:
+                    if field.type == str:
+                        value = enc_str(field, value)
                     buffer = buffer + struct.pack(
                         field.metadata[STRUCT_TYPE], value)
         return buffer

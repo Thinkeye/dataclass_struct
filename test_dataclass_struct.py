@@ -59,6 +59,13 @@ class ListTest:
                             metadata={STRUCT_TYPE: '<iiii'})
 
 
+@dataclass_struct
+class NestedDataclassStruct:
+    first_num: int = field(default=0, metadata={STRUCT_TYPE: '<i'})
+    nested_object: SimpleTestModel = field(default=SimpleTestModel())
+    last_num: int = field(default=0, metadata={STRUCT_TYPE: 'i'})
+
+
 class SimpleClassTestCase(unittest.TestCase):
     def test_testmodel(self):
         test_obj = SimpleTestModel('Name', 3.14, 42, 37)
@@ -129,6 +136,12 @@ class SimpleClassTestCase(unittest.TestCase):
         self.assertRaises(struct.error, test_obj.to_buffer)
         new_instance = ListTest.instance_from_buffer(buff)
         self.assertAlmostEqual(new_instance.float_list[0], 1.1, 5)
+
+    def test_nested_instance(self):
+        test_obj = NestedDataclassStruct()
+        self.assertEqual(b'\x00\x00\x00\x00\x00\x00\x00\x00'
+                         b'\x00\x00\x00\x00\x00\x00\x00\x00',
+                         test_obj.to_buffer())
 
 
 if __name__ == '__main__':
