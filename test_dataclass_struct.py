@@ -136,12 +136,19 @@ class SimpleClassTestCase(unittest.TestCase):
         self.assertRaises(struct.error, test_obj.to_buffer)
         new_instance = ListTest.instance_from_buffer(buff)
         self.assertAlmostEqual(new_instance.float_list[0], 1.1, 5)
+        self.assertAlmostEqual(new_instance.float_list[1], 1.0, 5)
 
     def test_nested_instance(self):
-        test_obj = NestedDataclassStruct()
-        self.assertEqual(b'\x00\x00\x00\x00\x00\x00\x00\x00'
-                         b'\x00\x00\x00\x00\x00\x00\x00\x00',
-                         test_obj.to_buffer())
+        buffer = b'\x01\x00\x00\x00\xc3\xf5H@\x02\x00\x00\x00\x02\x00\x00\x00'
+        test_obj = NestedDataclassStruct(1, SimpleTestModel('', 3.14, 2, 0), 2)
+        self.assertEqual(buffer, test_obj.to_buffer())
+        self.assertEqual(test_obj.first_num, 1)
+        self.assertEqual(test_obj.nested_object.my_num, 2)
+        self.assertEqual(test_obj.last_num, 2)
+        newobj = NestedDataclassStruct.instance_from_buffer(buffer)
+        self.assertEqual(newobj.first_num, 1)
+        self.assertEqual(newobj.nested_object.my_num, 2)
+        self.assertEqual(newobj.last_num, 2)
 
 
 if __name__ == '__main__':

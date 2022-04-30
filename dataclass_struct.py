@@ -50,7 +50,9 @@ def _process_class(cls, use_encoding):
         :return: offset after last consumed byte
         """
         for field in dataclasses.fields(cls):
-            if field.metadata and field.metadata.get(STRUCT_TYPE):
+            if hasattr(self.__dict__[field.name], 'from_buffer'):
+                offset = self.__dict__[field.name].from_buffer(buffer, offset)
+            elif field.metadata and field.metadata.get(STRUCT_TYPE):
                 field_format = field.metadata[STRUCT_TYPE]
                 raw_result = struct.unpack_from(field_format, buffer, offset)
                 if isinstance(field.type, list):
