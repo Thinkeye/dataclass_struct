@@ -46,11 +46,13 @@ def _process_class(cls, use_encoding):
 
         :param self: wrapped instance
         :param buffer: buffer tp read
-        :param offset: (optional) offset o start reading
+        :param offset: (optional) offset to start reading
         :return: offset after last consumed byte
         """
         for field in dataclasses.fields(cls):
-            if hasattr(self.__dict__[field.name], 'from_buffer'):
+            field_content = self.__dict__[field.name]
+            if hasattr(field_content, 'from_buffer')\
+                    and callable(field_content.from_buffer):
                 offset = self.__dict__[field.name].from_buffer(buffer, offset)
             elif field.metadata and field.metadata.get(STRUCT_TYPE):
                 field_format = field.metadata[STRUCT_TYPE]
@@ -68,18 +70,18 @@ def _process_class(cls, use_encoding):
 
     setattr(cls, 'from_buffer', from_buffer)
 
-    def to_buffer(self, buffer=b''):
+    def to_buffer(self):
         """
         Store the wrapped dataclass to a binary buffer.
 
         :param self: wrapped instance
-        :param buffer: (optional) buffer to continue, if any
         :return: resulting buffer
         """
+        buffer = b''
         for field in dataclasses.fields(cls):
             value = self.__dict__[field.name]
             if hasattr(value, 'to_buffer') and callable(value.to_buffer):
-                buffer = value.to_buffer(buffer)
+                buffer = buffer + value.to_buffer()
             elif field.metadata and field.metadata.get(STRUCT_TYPE):
                 if isinstance(field.type, list):
                     buffer = buffer + struct.pack(
@@ -93,16 +95,15 @@ def _process_class(cls, use_encoding):
 
     setattr(cls, 'to_buffer', to_buffer)
 
-    def instance_from_buffer(buffer: bytes, offset=0):
+    def instance_from_buffer(buffer: bytes):
         """
         Construct a wrapped class instance from a buffer.
 
         :param buffer: buffer with source binary data
-        :param offset: (optional) offset o start reading
         :return: class instance
         """
         object_instance = cls()
-        object_instance.from_buffer(buffer, offset)
+        object_instance.from_buffer(buffer)
         return object_instance
 
     setattr(cls, 'instance_from_buffer', instance_from_buffer)
