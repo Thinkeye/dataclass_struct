@@ -66,6 +66,12 @@ class NestedDataclassStruct:
     last_num: int = field(default=0, metadata={STRUCT_TYPE: 'i'})
 
 
+@dataclass_struct
+class DataclassListTest:
+    my_num: int = field(default=0, metadata={STRUCT_TYPE: '<i'})
+    dc_list: [SimpleTestModel] = field(default_factory=lambda: [])
+
+
 class SimpleClassTestCase(unittest.TestCase):
     def test_testmodel(self):
         test_obj = SimpleTestModel('Name', 3.14, 42, 37)
@@ -149,6 +155,27 @@ class SimpleClassTestCase(unittest.TestCase):
         self.assertEqual(newobj.first_num, 1)
         self.assertEqual(newobj.nested_object.my_num, 2)
         self.assertEqual(newobj.last_num, 2)
+
+    def test_list_dataclass(self):
+        buffer = b'\x02\x00\x00\x00\xc3\xf5H@\x01\x00\x00\x00\xc3\xf5H@\x02'\
+            b'\x00\x00\x00\xc3\xf5H@\x03\x00\x00\x00'
+        test_obj = DataclassListTest(2, [
+            SimpleTestModel('Name', 3.14, 1, 42),
+            SimpleTestModel('Name', 3.14, 2, 42),
+            SimpleTestModel('Name', 3.14, 3, 42)])
+        self.assertEqual(buffer, test_obj.to_buffer())
+        newobj = DataclassListTest.instance_from_buffer(buffer)
+        self.assertEqual(newobj.my_num, 2)
+        self.assertEqual(len(newobj.dc_list), 0)
+        newobj.dc_list = [
+            SimpleTestModel(),
+            SimpleTestModel(),
+            SimpleTestModel()]
+        newobj.from_buffer(buffer)
+        self.assertEqual(newobj.my_num, 2)
+        self.assertEqual(newobj.dc_list[0].my_num, 1)
+        self.assertEqual(newobj.dc_list[1].my_num, 2)
+        self.assertEqual(newobj.dc_list[2].my_num, 3)
 
 
 if __name__ == '__main__':

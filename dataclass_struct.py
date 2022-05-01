@@ -53,7 +53,7 @@ def _process_class(cls, use_encoding):
             field_content = self.__dict__[field.name]
             if hasattr(field_content, 'from_buffer')\
                     and callable(field_content.from_buffer):
-                offset = self.__dict__[field.name].from_buffer(buffer, offset)
+                offset = field_content.from_buffer(buffer, offset)
             elif field.metadata and field.metadata.get(STRUCT_TYPE):
                 field_format = field.metadata[STRUCT_TYPE]
                 raw_result = struct.unpack_from(field_format, buffer, offset)
@@ -66,6 +66,12 @@ def _process_class(cls, use_encoding):
                 else:
                     self.__dict__[field.name] = value
                 offset = offset + struct.calcsize(field_format)
+            elif isinstance(field.type, list):
+                for item in field_content:
+                    if hasattr(item, 'from_buffer')\
+                            and callable(item.from_buffer):
+                        offset = item.from_buffer(buffer, offset)
+
         return offset
 
     setattr(cls, 'from_buffer', from_buffer)
@@ -91,6 +97,12 @@ def _process_class(cls, use_encoding):
                         value = enc_str(field, value)
                     buffer = buffer + struct.pack(
                         field.metadata[STRUCT_TYPE], value)
+            elif isinstance(field.type, list):
+                for item in value:
+                    if hasattr(item, 'to_buffer')\
+                            and callable(item.to_buffer):
+                        buffer = buffer + item.to_buffer()
+
         return buffer
 
     setattr(cls, 'to_buffer', to_buffer)

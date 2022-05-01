@@ -22,24 +22,23 @@ to the decorated dataclass.
      Construct a wrapped class instance from a buffer.
            
      :param buffer: buffer with source binary data
-     :param offset: (optional) offset o start reading
      :return: class instance
      
 ### to_buffer(self, buffer=b'')
      Store the wrapped dataclass to a binary buffer.
            
      :param self: wrapped instance
-     :param buffer: (optional) buffer to continue, if any
      :return: resulting buffer
 
 ## Limitations
 
-Currently, only flat classes with simple fields are supported, meaning
+Currently, some features are not supported:
 
 - no inheritance hierarchy
-- no lists
 - no tuples
-- no nested dataclasses
+
+If a dataclass member provide methods `from_bugger` and `to_buffer`, 
+it will be included into the resulting buffer and loaded from it.
 
 ## Usage
 
