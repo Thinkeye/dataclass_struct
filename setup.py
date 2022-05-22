@@ -17,7 +17,7 @@ setup(
     author="Peter Krahulik",
     author_email='peter.krahulik@googlemail.com',
     py_modules=["dataclass_struct"],
-    url='https://https://github.com/Thinkeye/dataclass_struct',
+    url='https://github.com/Thinkeye/dataclass_struct',
     keywords='dataclass, struct',
     classifiers=[
         "Programming Language :: Python :: 3",
