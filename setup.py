@@ -12,7 +12,7 @@ setup(
     'as binary buffer using struct.',
     long_description=readme_description,
     long_description_content_type="text/markdown",
-    version='0.9.4',
+    version='0.9.5',
     license='MIT',
     author="Peter Krahulik",
     author_email='peter.krahulik@googlemail.com',
