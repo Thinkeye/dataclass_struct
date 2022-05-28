@@ -72,6 +72,13 @@ class DataclassListTest:
     dc_list: [SimpleTestModel] = field(default_factory=lambda: [])
 
 
+@dataclass_struct
+class BytesListTest:
+    my_num: int = field(default=0, metadata={STRUCT_TYPE: '<i'})
+    bytes_list: [bytes] = field(default_factory=lambda: [],
+                                metadata={STRUCT_TYPE: '16s16s16s'})
+
+
 class SimpleClassTestCase(unittest.TestCase):
     def test_testmodel(self):
         test_obj = SimpleTestModel('Name', 3.14, 42, 37)
@@ -176,6 +183,23 @@ class SimpleClassTestCase(unittest.TestCase):
         self.assertEqual(newobj.dc_list[0].my_num, 1)
         self.assertEqual(newobj.dc_list[1].my_num, 2)
         self.assertEqual(newobj.dc_list[2].my_num, 3)
+
+    def test_bytes_list(self):
+        buffer = b'\x01\x00\x00\x00abcd\x00\x00\x00\x00\x00\x00\x00\x00\x00'\
+                 b'\x00\x00\x00xyza\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'\
+                 b'\x00\x00ABCff\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+        test_obj = BytesListTest(1, [b'abcd', b'xyza', b'ABCff'])
+        self.assertEqual(buffer, test_obj.to_buffer())
+        newobj = BytesListTest()
+        newobj.bytes_list = [0, 0, 0]
+        newobj.from_buffer(buffer)
+        self.assertEqual(newobj.my_num, 1)
+        self.assertEqual(newobj.bytes_list[0], b'abcd\x00\x00\x00\x00\x00'
+                         b'\x00\x00\x00\x00\x00\x00\x00')
+        self.assertEqual(newobj.bytes_list[1], b'xyza\x00\x00\x00\x00\x00'
+                         b'\x00\x00\x00\x00\x00\x00\x00')
+        self.assertEqual(newobj.bytes_list[2], b'ABCff\x00\x00\x00\x00\x00'
+                         b'\x00\x00\x00\x00\x00\x00')
 
 
 if __name__ == '__main__':

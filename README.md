@@ -36,6 +36,7 @@ Currently, some features are not supported:
 
 - no inheritance hierarchy
 - no tuples
+- no strings in lists
 
 If a dataclass member provides methods `from_buffer` and `to_buffer`, 
 it will be included into the resulting buffer and loaded from it 
