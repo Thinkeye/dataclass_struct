@@ -123,7 +123,7 @@ def _process_class(cls, use_encoding):
     return cls
 
 
-def dataclass_struct(cls=None, /, *, use_encoding='utf_8'):
+def dataclass_struct(cls=None, *, use_encoding='utf_8'):
     """
     Top level decorator
     """
