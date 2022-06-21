@@ -1,61 +1,60 @@
-# dataclass_struct 0.9.5
+# dataclass_struct
 
 Decorator providing capability to emit and read the decorated dataclass as a binary buffer.
 A special new metadata field `STRUCT_TYPE` contains the *struct* format for the dataclass field.
 
 See *struct* documentation for the formatting options.
 
-## FUNCTIONS
+## Functions
 
 The decorator `@dataclass_struct` adds following methods 
 to the decorated dataclass. 
  
-### from_buffer(self, buffer: bytes, offset=0)
-     Read the wrapped dataclass from a binary buffer.
-          
-     :param self: wrapped instance
-     :param buffer: buffer tp read
-     :param offset: (optional) offset o start reading
-     :return: offset after last consumed byte
-       
-### instance_from_buffer(buffer: bytes, offset=0)
-     Construct a wrapped class instance from a buffer.
-           
-     :param buffer: buffer with source binary data
-     :return: class instance
-     
-### to_buffer(self, buffer=b'')
-     Store the wrapped dataclass to a binary buffer.
-           
-     :param self: wrapped instance
-     :return: resulting buffer
+### from_buffer(self: object, buffer: bytes, offset: int = 0)
+    Read the wrapped dataclass from a binary buffer.
+
+    :param self: wrapped instance
+    :param buffer: buffer to read
+    :param offset: (optional) offset o start reading
+    :return: offset after last consumed byte
+
+### instance_from_buffer(buffer: bytes, offset: int = 0)
+    Construct a wrapped class instance from a buffer.
+        
+    :param buffer: buffer with source binary data
+    :return: class instance
+
+### to_buffer(self) -> bytes
+    Store the wrapped dataclass to a binary buffer.
+        
+    :param self: wrapped instance
+    :return: resulting buffer
 
 ## Limitations
 
 Currently, some features are not supported:
 
-- no inheritance hierarchy
-- no tuples
-- no strings in lists
+- Inheritance hierarchy
+- Tuples
+- Strings in lists
 
 If a dataclass member provides methods `from_buffer` and `to_buffer`, 
 it will be included into the resulting buffer and loaded from it 
 without having `STRUCT_TYPE` metadata on its own.
 
-Lists of primitive types can be used, if the number of list members matches the number 
-of format elements. If not, the error message from underlying struct call 
-will be emitted.
+Lists of primitive types can be used, if the number of list members matches
+the number of format elements. If not, the error message from underlying
+struct call will be emitted.
 
-Lists of user defined objects will be written/loaded 
-when the object class provides corresponding methods.
-These also don't need `STRUCT_TYPE` metadata.
+Lists of user defined objects will be written/loaded when the object class
+provides corresponding methods. These also don't need `STRUCT_TYPE` metadata.
 
 ## Usage
 
 ### Simple buffer for a float and an integer
 
-Fields having metadata field `STRUCT_TYPE` 
-will be written/read out from the buffer.
+Fields having metadata argument `STRUCT_TYPE`  will be written/read out from
+the buffer.
 
 ```python
 from dataclass_struct import STRUCT_TYPE, dataclass_struct
@@ -99,10 +98,9 @@ buff = test_obj.to_buffer()
 
 ### String with custom encoding
 
-Default encoding for strings is `'utf-8'`. 
-This can be changed for the whole dataclass by 
-the decorator parameter `use_encoding`,
-or for the particular field using metadata `ENCODING`.
+Default encoding for strings is `'utf-8'`. This can be changed for the whole
+dataclass by the decorator parameter `use_encoding`, or for the particular
+field using metadata `ENCODING`.
 
 ```python
 @dataclass_struct(use_encoding='ascii')
@@ -130,4 +128,3 @@ class ExplicitDataclass:
     my_flt: float = field(default=0, metadata={STRUCT_TYPE: '<f'})
     my_num: int = field(default=0, metadata={STRUCT_TYPE: '<i'})
 ```
-

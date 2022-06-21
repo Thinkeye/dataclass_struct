@@ -14,12 +14,13 @@ buff = test_obj.to_buffer()
 
 import dataclasses
 import struct
+from typing import Any, Callable, Optional
 
 STRUCT_TYPE = 'STRUCT_TYPE'
 ENCODING = 'encoding'
 
 
-def _process_class(cls, use_encoding):
+def _process_class(cls: type, use_encoding: str) -> type:
     """
     Decorate dataclass to work with struct.
 
@@ -28,19 +29,15 @@ def _process_class(cls, use_encoding):
     if not dataclasses.is_dataclass(cls):
         dataclasses.dataclass(cls)
 
-    def dec_str(field, val):
-        enc = use_encoding
-        if field.metadata.get(ENCODING):
-            enc = field.metadata.get(ENCODING)
+    def dec_str(field: "dataclasses.Field[Any]", val: bytes) -> str:
+        enc = field.metadata.get(ENCODING) or use_encoding
         return val.decode(enc).rstrip('\00')
 
-    def enc_str(field, val):
-        enc = use_encoding
-        if field.metadata.get(ENCODING):
-            enc = field.metadata.get(ENCODING)
+    def enc_str(field: "dataclasses.Field[Any]", val: str) -> bytes:
+        enc = field.metadata.get(ENCODING) or use_encoding
         return val.encode(enc)
 
-    def from_buffer(self, buffer: bytes, offset=0):
+    def from_buffer(self: object, buffer: bytes, offset: int = 0) -> int:
         """
         Read the wrapped dataclass from a binary buffer.
 
@@ -76,7 +73,7 @@ def _process_class(cls, use_encoding):
 
     setattr(cls, 'from_buffer', from_buffer)
 
-    def to_buffer(self):
+    def to_buffer(self: object) -> bytes:
         """
         Store the wrapped dataclass to a binary buffer.
 
@@ -107,7 +104,7 @@ def _process_class(cls, use_encoding):
 
     setattr(cls, 'to_buffer', to_buffer)
 
-    def instance_from_buffer(buffer: bytes):
+    def instance_from_buffer(buffer: bytes) -> object:
         """
         Construct a wrapped class instance from a buffer.
 
@@ -123,11 +120,13 @@ def _process_class(cls, use_encoding):
     return cls
 
 
-def dataclass_struct(cls=None, /, *, use_encoding='utf_8'):
+def dataclass_struct(
+    cls: Optional[type] = None, *, use_encoding: str = 'utf_8'
+    )-> Callable[[type], type]:
     """
     Top level decorator
     """
-    def wrap(cls):
+    def wrap(cls: type) -> type:
         return _process_class(cls, use_encoding)
 
     if cls is None:

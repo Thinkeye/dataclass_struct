@@ -1,0 +1,2 @@
+include test_dataclass_struct.py
+include dataclass_struct/py.typed
